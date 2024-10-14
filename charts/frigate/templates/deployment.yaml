@@ -125,9 +125,16 @@ spec:
           resources:
             {{- include "frigate.resources" . | nindent 12 }}
       volumes:
-        - name: configmap
+          - name: configmap
+         {{- if .Values.configmap.hostPath }}
+            hostPath:
+              # Ensure the file directory is created.
+              path: {{ .Values.configmap.hostPath }}
+              type: DirectoryOrCreate
+        {{- else}}
           configMap:
-            name: {{ template "frigate.fullname" . }}
+            name: {{ template "frigate.fullname" . }}  
+        {{- end }}    
         {{- if .Values.coral.enabled }}
         - name: coral-dev
           hostPath:
