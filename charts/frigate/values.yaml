@@ -59,7 +59,7 @@ nameOverride: ""
 fullnameOverride: ""
 
 configmap:
-  hostPath: /frigate/config/config.yml
+  hostPath: /frigate/config/
 # -- frigate configuration - see [Docs](https://docs.frigate.video/configuration/index) for more info
 # config: |
 #   mqtt:

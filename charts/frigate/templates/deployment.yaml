@@ -19,7 +19,6 @@ spec:
         app.kubernetes.io/name: {{ include "frigate.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
       annotations:
-        checksum/configmap: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
       {{- if .Values.podAnnotations }}
         {{- range $key, $value := .Values.podAnnotations }}
         {{ $key }}: {{ $value | quote }}
@@ -106,9 +105,6 @@ spec:
             - mountPath: {{ .Values.coral.hostPath }}
               name: coral-dev
             {{- end }}
-            - mountPath: /config/config.yml
-              subPath: config.yml
-              name: configmap
             - mountPath: /config
               name: config
             - mountPath: /data
@@ -125,27 +121,27 @@ spec:
           resources:
             {{- include "frigate.resources" . | nindent 12 }}
       volumes:
-          - name: configmap
-         {{- if .Values.configmap.hostPath }}
-            hostPath:
-              # Ensure the file directory is created.
-              path: {{ .Values.configmap.hostPath }}
-              type: DirectoryOrCreate
-        {{- else}}
+        - name: configmap
           configMap:
             name: {{ template "frigate.fullname" . }}  
-        {{- end }}    
         {{- if .Values.coral.enabled }}
         - name: coral-dev
           hostPath:
             path: {{ .Values.coral.hostPath }}
         {{- end }}
         - name: config
-        {{- if .Values.persistence.config.enabled }}
-          persistentVolumeClaim:
-            claimName: {{ if .Values.persistence.config.existingClaim }}{{ .Values.persistence.config.existingClaim }}{{- else }}{{ template "frigate.fullname" . }}-config{{- end }}
+         {{- if .Values.configmap.hostPath }}
+          hostPath:
+            # Ensure the file directory is created.
+            path: {{ .Values.configmap.hostPath }}
+            type: DirectoryOrCreate
         {{- else }}
-          emptyDir: {}
+          {{- if .Values.persistence.config.enabled }}
+            persistentVolumeClaim:
+              claimName: {{ if .Values.persistence.config.existingClaim }}{{ .Values.persistence.config.existingClaim }}{{- else }}{{ template "frigate.fullname" . }}-config{{- end }}
+          {{- else }}
+            emptyDir: {}
+          {{- end }}
         {{- end }}
         - name: data
         {{- if .Values.persistence.data.enabled }}
